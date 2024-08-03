@@ -6,6 +6,7 @@ let rows, cols;
 let snake, food, direction, newDirection, score;
 let gameStarted = false;
 let gameOver = false;
+let paused = false; // Add paused state
 
 // Color settings for smooth transition
 const startColor = [0, 255, 0]; // Green
@@ -20,6 +21,9 @@ let colorProgress = 0;
 
 const appleImage = new Image();
 appleImage.src = 'apple.png'; // Path to your apple image
+
+// Load the eat sound
+const eatSound = new Audio('./eat.mp3'); // Path to your sound file
 
 document.addEventListener('keydown', handleKey);
 
@@ -40,8 +44,6 @@ function resizeCanvas() {
 }
 
 function update() {
-    const now = Date.now();
-
     if (!gameStarted) {
         drawStartScreen();
         return;
@@ -49,6 +51,11 @@ function update() {
 
     if (gameOver) {
         drawGameOverScreen();
+        return;
+    }
+
+    if (paused) {
+        drawPausedScreen(); // Draw paused screen
         return;
     }
 
@@ -88,6 +95,7 @@ function moveSnake() {
         // Snake has eaten the food
         score++;
         food = generateFood();
+        eatSound.play(); // Play the sound when the snake eats the food
     } else {
         snake.pop(); // Remove the last segment of the snake if no food is eaten
     }
@@ -141,13 +149,6 @@ function draw() {
     ctx.fillText(`Food: (${food.x}, ${food.y})`, 10, 25);
 }
 
-function interpolateColor(start, end, factor) {
-    const r = Math.round(start[0] + factor * (end[0] - start[0]));
-    const g = Math.round(start[1] + factor * (end[1] - start[1]));
-    const b = Math.round(start[2] + factor * (end[2] - start[2]));
-    return `rgb(${r}, ${g}, ${b})`;
-}
-
 function drawStartScreen() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'white';
@@ -168,6 +169,23 @@ function drawGameOverScreen() {
     ctx.fillText('Press any key to restart', canvas.width / 2, canvas.height / 2 + 20);
 }
 
+// Draw paused screen
+function drawPausedScreen() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.font = '30px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Paused', canvas.width / 2, canvas.height / 2);
+}
+
+function interpolateColor(start, end, factor) {
+    const r = Math.round(start[0] + factor * (end[0] - start[0]));
+    const g = Math.round(start[1] + factor * (end[1] - start[1]));
+    const b = Math.round(start[2] + factor * (end[2] - start[2]));
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
 function generateFood() {
     let x, y;
     do {
@@ -183,14 +201,23 @@ function generateFood() {
 }
 
 function handleKey(event) {
+    const key = event.key;
+
+    if (key === 'Escape') {
+        paused = !paused; // Toggle pause state
+        return;
+    }
+
     if (gameOver || !gameStarted) {
         gameStarted = true;
         gameOver = false;
+        paused = false; // Unpause if restarting
         resetGame();
         return;
     }
 
-    const key = event.key;
+    if (paused) return; // Do nothing if paused
+
     if (key === 'ArrowUp' && direction !== 'DOWN') newDirection = 'UP';
     if (key === 'ArrowDown' && direction !== 'UP') newDirection = 'DOWN';
     if (key === 'ArrowLeft' && direction !== 'RIGHT') newDirection = 'LEFT';

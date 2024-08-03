@@ -5,6 +5,7 @@ function createWindow () {
     const mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
+        autoHideMenuBar: true, // Automatically hide the menu bar
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -12,6 +13,8 @@ function createWindow () {
             nodeIntegration: false,
         },
     });
+
+    mainWindow.setMenuBarVisibility(false); // Explicitly hide the menu bar
 
     mainWindow.loadFile(path.join(__dirname, 'public', 'index.html'));
 
